@@ -113,9 +113,8 @@ function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
-
-async function runRustParallel(files: string[], outputDir: string): Promise<BatchResult> {
-  return invoke<BatchResult>("batch_process_images", {
+async function runRustParallelNew(files: string[], outputDir: string, parallel: boolean): Promise<BatchResult> {
+  return invoke<BatchResult>("batch_process_images_new", {
     files,
     outputDir,
     width: targetWidth.value,
@@ -123,18 +122,7 @@ async function runRustParallel(files: string[], outputDir: string): Promise<Batc
     keepRatio: keepRatio.value,
     format: format.value,
     quality: quality.value,
-  });
-}
-
-async function runRustSequential(files: string[], outputDir: string): Promise<BatchResult> {
-  return invoke<BatchResult>("batch_process_images_sequential", {
-    files,
-    outputDir,
-    width: targetWidth.value,
-    height: targetHeight.value,
-    keepRatio: keepRatio.value,
-    format: format.value,
-    quality: quality.value,
+    parallel,
   });
 }
 
@@ -177,10 +165,10 @@ async function startProcessing() {
       let result: BatchResult;
       switch (mode) {
         case "rust-parallel":
-          result = await runRustParallel(files, outputDir);
+          result = await runRustParallelNew(files, outputDir, true);
           break;
         case "rust-sequential":
-          result = await runRustSequential(files, outputDir);
+          result = await runRustParallelNew(files, outputDir, false);
           break;
         case "node-parallel":
           result = await runNode(files, outputDir, true);

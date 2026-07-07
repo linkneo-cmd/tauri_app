@@ -24,9 +24,9 @@ fn list_images(folder: String) -> Result<Vec<image_processor::ImageFileInfo>, St
     image_processor::list_images(&folder)
 }
 
-/// 批量处理图片（Rust 并行处理）
+/// 批量处理图片新（通过入参整合并行串行）
 #[tauri::command]
-fn batch_process_images(
+fn batch_process_images_new(
     files: Vec<String>,
     output_dir: String,
     width: u32,
@@ -34,22 +34,9 @@ fn batch_process_images(
     keep_ratio: bool,
     format: String,
     quality: u8,
+    parallel: bool,
 ) -> image_processor::BatchResult {
-    image_processor::batch_process_images(files, output_dir, width, height, keep_ratio, format, quality)
-}
-
-/// 批量处理图片（Rust 串行处理）- 用于性能对比
-#[tauri::command]
-fn batch_process_images_sequential(
-    files: Vec<String>,
-    output_dir: String,
-    width: u32,
-    height: u32,
-    keep_ratio: bool,
-    format: String,
-    quality: u8,
-) -> image_processor::BatchResult {
-    image_processor::batch_process_images_sequential(files, output_dir, width, height, keep_ratio, format, quality)
+    image_processor::batch_process_images_new(files, output_dir, width, height, keep_ratio, format, quality, parallel)
 }
 
 /// 批量处理图片（Node.js 版本）- 用于性能对比
@@ -104,8 +91,7 @@ pub fn run() {
             read_markdown_file,
             save_markdown_file,
             list_images,
-            batch_process_images,
-            batch_process_images_sequential,
+            batch_process_images_new,
             batch_process_images_node,
         ])
         .run(tauri::generate_context!())

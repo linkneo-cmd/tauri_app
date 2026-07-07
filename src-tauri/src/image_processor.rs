@@ -188,8 +188,8 @@ fn process_single_image(
     }
 }
 
-/// 批量处理图片（并行处理）
-pub fn batch_process_images(
+/// 批量处理图片新（通过入参整合并行串行）
+pub fn batch_process_images_new(
     files: Vec<String>,
     output_dir: String,
     width: u32,
@@ -197,83 +197,58 @@ pub fn batch_process_images(
     keep_ratio: bool,
     format: String,
     quality: u8,
+    parallel: bool,
 ) -> BatchResult {
     let total = files.len();
     let start = Instant::now();
+    // ========== 根据 parallel 判断并行或串行处理图片 =========={
+    let results: Vec<ProcessResult> = if parallel {
+        files
+            .par_iter()
+            .map(|file_path| {
+                let path = Path::new(file_path);
+                let stem = path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("unknown");
+                let output_name = format!("{}.{}", stem, format);
+                let output_path = Path::new(&output_dir).join(&output_name);
 
-    // ========== 使用 Rayon 并行处理所有图片 ==========
-    let results: Vec<ProcessResult> = files
-        .par_iter()
-        .map(|file_path| {
-            let path = Path::new(file_path);
-            let stem = path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("unknown");
-            let output_name = format!("{}.{}", stem, format);
-            let output_path = Path::new(&output_dir).join(&output_name);
+                process_single_image(
+                    file_path,
+                    output_path.to_str().unwrap(),
+                    width,
+                    height,
+                    keep_ratio,
+                    &format,
+                    quality,
+                )
+            })
+            .collect()
+    } else {
+        files
+            .iter()
+            .map(|file_path| {
+                let path = Path::new(file_path);
+                let stem = path
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("unknown");
+                let output_name = format!("{}.{}", stem, format);
+                let output_path = Path::new(&output_dir).join(&output_name);
 
-            process_single_image(
-                file_path,
-                output_path.to_str().unwrap(),
-                width,
-                height,
-                keep_ratio,
-                &format,
-                quality,
-            )
-        })
-        .collect();
-
-    let elapsed = start.elapsed();
-    let success_count = results.iter().filter(|r| r.success).count();
-    let failed_count = results.iter().filter(|r| !r.success).count();
-
-    BatchResult {
-        total,
-        success: success_count,
-        failed: failed_count,
-        total_time_ms: elapsed.as_millis(),
-        results,
-    }
-}
-
-/// 批量处理图片（串行处理）- 用于性能对比
-pub fn batch_process_images_sequential(
-    files: Vec<String>,
-    output_dir: String,
-    width: u32,
-    height: u32,
-    keep_ratio: bool,
-    format: String,
-    quality: u8,
-) -> BatchResult {
-    let total = files.len();
-    let start = Instant::now();
-
-    // ========== 使用标准迭代器串行处理所有图片 ==========
-    let results: Vec<ProcessResult> = files
-        .iter()
-        .map(|file_path| {
-            let path = Path::new(file_path);
-            let stem = path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or("unknown");
-            let output_name = format!("{}.{}", stem, format);
-            let output_path = Path::new(&output_dir).join(&output_name);
-
-            process_single_image(
-                file_path,
-                output_path.to_str().unwrap(),
-                width,
-                height,
-                keep_ratio,
-                &format,
-                quality,
-            )
-        })
-        .collect();
+                process_single_image(
+                    file_path,
+                    output_path.to_str().unwrap(),
+                    width,
+                    height,
+                    keep_ratio,
+                    &format,
+                    quality,
+                )
+            })
+            .collect()
+    };
 
     let elapsed = start.elapsed();
     let success_count = results.iter().filter(|r| r.success).count();
