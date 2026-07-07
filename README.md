@@ -1,7 +1,11 @@
 # Tauri + Vue + TypeScript
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Tauri框架自学记录
 
-## Recommended IDE Setup
+## MarkDown编辑器
+  核心依赖 marked npm 包
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## 图片批处理压缩
+  对比 Rust 并行、串行， Node 并行、串行
+  Rust 核心依赖 rayon， Node 核心依赖 sharp
+  注：Node 使用了基于 C++ 的高性能库 Sharp（libvips），Rust 使用了安全的纯原生库。 实际对比中 Node 效果反而更佳，待更新更合理的对比方式
