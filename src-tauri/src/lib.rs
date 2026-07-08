@@ -2,6 +2,7 @@ mod image_processor;
 
 use std::fs;
 use std::process::Command;
+use std::path::Path;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -61,11 +62,12 @@ fn batch_process_images_node(
         "quality": quality,
         "parallel": parallel,
     });
-
+    let manifest_dir = env!("CARGO_MANIFEST_DIR"); // 编译时宏，得到 src-tauri 的绝对路径
+    let project_root = Path::new(manifest_dir).parent().unwrap(); // 项目根目录（tauri_app）
     let output = Command::new("node")
-        .arg("src/node-image-processor.js")
+        .arg("src/node-image-processor-sharp.js")
         .arg(config.to_string())
-        .current_dir("/Users/neozhy/Documents/Learn/Rust/tauri/tauri_app")
+        .current_dir(project_root)
         .output()
         .map_err(|e| format!("执行 Node.js 脚本失败: {}", e))?;
 
